@@ -64,7 +64,8 @@ mod tests {
             side: GhSide::Right,
             start_line: None,
             start_side: None,
-            body: "**[ISSUE]** boom".to_string(),
+            body: "[ISSUE] boom".to_string(),
+            comment_id: "test-comment-id".to_string(),
         }
     }
 
@@ -80,7 +81,7 @@ mod tests {
         assert_eq!(comments[0]["path"], "src/lib.rs");
         assert_eq!(comments[0]["line"], 42);
         assert_eq!(comments[0]["side"], "RIGHT");
-        assert_eq!(comments[0]["body"], "**[ISSUE]** boom");
+        assert_eq!(comments[0]["body"], "[ISSUE] boom");
     }
 
     #[test]
@@ -114,6 +115,7 @@ mod tests {
             start_line: Some(15),
             start_side: Some(GhSide::Left),
             body: "ranged".to_string(),
+            comment_id: "test-comment-id".to_string(),
         };
         let payload = build_review_payload("sha", "", SubmitEvent::Comment, &[inline]);
         let comment = &payload["comments"][0];
@@ -138,6 +140,7 @@ mod tests {
             start_line: None,
             start_side: None,
             body: String::new(),
+            comment_id: "test-comment-id".to_string(),
         };
         let payload = build_review_payload("sha", "", SubmitEvent::Comment, &[inline]);
         assert_eq!(payload["comments"][0]["side"], "LEFT");
