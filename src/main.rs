@@ -603,7 +603,28 @@ fn main() -> anyhow::Result<()> {
                     if let Some(target) = app.take_pending_editor_target() {
                         match run_editor_from_tui(&mut terminal, &target) {
                             Ok(Ok(())) => {
-                                app.set_message(format!("Opened {}", target.path.display()));
+                                if app.diff_source.includes_worktree_changes() {
+                                    match app.reload_diff_files() {
+                                        Ok((count, invalidated)) => {
+                                            let invalidated_suffix = if invalidated > 0 {
+                                                format!(", {invalidated} changed since last review")
+                                            } else {
+                                                String::new()
+                                            };
+                                            app.set_message(format!(
+                                                "Opened {} and reloaded {count} files{invalidated_suffix}",
+                                                target.path.display()
+                                            ));
+                                        }
+                                        Err(err) => {
+                                            app.set_error(format!(
+                                                "Reload after editor failed: {err}"
+                                            ));
+                                        }
+                                    }
+                                } else {
+                                    app.set_message(format!("Opened {}", target.path.display()));
+                                }
                             }
                             Ok(Err(err)) => app.set_error(err.to_string()),
                             Err(err) => app.set_error(format!("Failed to restore terminal: {err}")),

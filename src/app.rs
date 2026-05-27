@@ -497,6 +497,41 @@ pub enum DiffSource {
     PullRequest(Box<PullRequestDiffSource>),
 }
 
+impl DiffSource {
+    /// Returns true when the active review target includes live worktree changes.
+    ///
+    /// This marks diff sources where reloading after an external editor exits
+    /// can surface newly written worktree edits. Pure staged, commit-range,
+    /// and pull-request reviews intentionally return false because editing the
+    /// local file does not update the selected review target.
+    pub fn includes_worktree_changes(&self) -> bool {
+        matches!(
+            self,
+            Self::WorkingTree
+                | Self::Unstaged
+                | Self::StagedAndUnstaged
+                | Self::StagedUnstagedAndCommits(_)
+        )
+    }
+}
+
+#[cfg(test)]
+mod diff_source_tests {
+    use super::*;
+
+    #[test]
+    fn unstaged_source_includes_worktree_changes() {
+        assert!(DiffSource::Unstaged.includes_worktree_changes());
+    }
+
+    #[test]
+    fn commit_range_source_does_not_include_worktree_changes() {
+        let source = DiffSource::CommitRange(vec!["abc123".to_string()]);
+
+        assert!(!source.includes_worktree_changes());
+    }
+}
+
 /// Runtime PR identity for `DiffSource::PullRequest`.
 ///
 /// The `PrSessionKey` portion is what scopes persistence; the additional
